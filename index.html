@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Quaff Order Form</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f5f6f8; padding: 20px; }
+        .form-container { background: white; border: 1px solid #e1e3e6; border-radius: 8px; max-width: 500px; margin: 0 auto; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h1 { font-size: 24px; margin-bottom: 25px; color: #333; }
+        .form-group { margin-bottom: 20px; position: relative; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #333; font-size: 14px; }
+        .help-text { font-size: 11px; color: #666; margin-bottom: 5px; display: block; }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 10px; border: 1px solid #c3c6cb; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        .phone-container { display: flex; gap: 10px; }
+        .phone-container select { width: 30%; }
+        .phone-container input { width: 70%; }
+        .suggestions-box { border: 1px solid #c3c6cb; background: white; position: absolute; width: 100%; z-index: 100; max-height: 150px; overflow-y: auto; box-sizing: border-box; display: none; }
+        .suggestion-item { padding: 10px; cursor: pointer; font-size: 13px; }
+        .suggestion-item:hover { background-color: #f0f0f0; }
+        .submit-btn { background-color: #0073ea; color: white; border: none; padding: 12px 24px; border-radius: 4px; font-weight: bold; cursor: pointer; float: right; font-size: 14px; }
+        .submit-btn:hover { background-color: #0056b3; }
+        .clearfix::after { content: ""; clear: both; display: table; }
+        .required { color: #eb5757; }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <h1>Quaff</h1>
+    
+    <form action="https://hook.eu1.make.com/wvx12alfcmn12yhwqozu902nhyc672l1" method="POST" id="orderForm">
+        
+        <!-- Reseller Company Name -->
+        <div class="form-group">
+            <label for="reseller_name">Reseller Company Name</label>
+            <span class="help-text">Enter your Reseller Company Name</span>
+            <input type="text" id="reseller_name" name="reseller_name" maxlength="255" required>
+        </div>
+
+        <!-- Location with Auto-Suggest -->
+        <div class="form-group">
+            <label for="location">Location</label>
+            <span class="help-text">Enter your address</span>
+            <input type="text" id="location" name="location" placeholder="Search for a location" autocomplete="off" required>
+            <div id="suggestions" class="suggestions-box"></div>
+        </div>
+
+        <!-- Phone Number with Prefix -->
+        <div class="form-group">
+            <label for="phone">Phone</label>
+            <div class="phone-container">
+                <select id="phone_prefix" name="phone_prefix" required>
+                    <option value="+44">+44 (UK)</option>
+                    <option value="+1">+1 (US)</option>
+                    <option value="+33">+33 (FR)</option>
+                    <option value="+49">+49 (DE)</option>
+                </select>
+                <input type="text" id="phone_number" name="phone_number" placeholder="Phone number" required>
+            </div>
+        </div>
+
+        <!-- Priority Dropdown -->
+        <div class="form-group">
+            <label for="priority">Priority</label>
+            <select id="priority" name="priority" required>
+                <option value="">-- Select Priority --</option>
+                <option value="High">High</option>
+                <option value="Normal">Normal</option>
+            </select>
+        </div>
+
+        <!-- Model Dropdown -->
+        <div class="form-group">
+            <label for="model">Model</label>
+            <select id="model" name="model" onchange="validateZeltserUnits()" required>
+                <option value="">-- Select Model --</option>
+                <option value="Aruba">Aruba</option>
+                <option value="Avatar">Avatar</option>
+                <option value="Marumba">Marumba</option>
+                <option value="Zeltser">Zeltser</option>
+            </select>
+        </div>
+
+        <!-- Size Dropdown -->
+        <div class="form-group">
+            <label for="size">Size</label>
+            <select id="size" name="size" required>
+                <option value="">-- Select Size --</option>
+                <option value="0.75L">0.75L</option>
+                <option value="1L">1L</option>
+            </select>
+        </div>
+
+        <!-- Units with conditional validation -->
+        <div class="form-group">
+            <label for="units">#Units <span class="required">*</span></label>
+            <span class="help-text" id="units_help">Enter a number higher than 500 if you select Zeltser</span>
+            <input type="number" id="units" name="units" min="1" oninput="validateZeltserUnits()" required>
+        </div>
+
+        <!-- Unit Price -->
+        <div class="form-group">
+            <label for="unit_price">Unit Price</label>
+            <input type="number" id="unit_price" name="unit_price" step="0.01" min="0" required>
+        </div>
+
+        <!-- Discount -->
+        <div class="form-group">
+            <label for="discount">Discount</label>
+            <span class="help-text">Enter discount % if requested</span>
+            <input type="number" id="discount" name="discount" step="0.1" min="0" max="100">
+        </div>
+
+        <div class="clearfix">
+            <button type="submit" class="submit-btn">Submit</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // 1. Check dynamic validation for Zeltser minimum units
+    function validateZeltserUnits() {
+        const model = document.getElementById('model').value;
+        const unitsInput = document.getElementById('units');
+        
+        if (model === 'Zeltser') {
+            unitsInput.min = "500";
+            if (unitsInput.value && parseInt(unitsInput.value) < 500) {
+                unitsInput.setCustomValidity("For the Zeltser model, you must order a minimum of 500 units.");
+            } else {
+                unitsInput.setCustomValidity("");
+            }
+        } else {
+            unitsInput.min = "1";
+            unitsInput.setCustomValidity("");
+        }
+    }
+
+    // 2. Free Address Suggestion Engine (OpenStreetMap Nominatim API)
+    const locationInput = document.getElementById('location');
+    const suggestionsBox = document.getElementById('suggestions');
+    let debounceTimer;
+
+    locationInput.addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+        const query = this.value;
+        if (query.length < 3) { suggestionsBox.style.display = 'none'; return; }
+
+        debounceTimer = setTimeout(() => {
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`)
+                .then(response => response.json())
+                .then(data => {
+                    suggestionsBox.innerHTML = '';
+                    if (data.length === 0) { suggestionsBox.style.display = 'none'; return; }
+                    
+                    data.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'suggestion-item';
+                        div.textContent = item.display_name;
+                        div.addEventListener('click', () => {
+                            locationInput.value = item.display_name;
+                            suggestionsBox.style.display = 'none';
+                        });
+                        suggestionsBox.appendChild(div);
+                    });
+                    suggestionsBox.style.display = 'block';
+                });
+        }, 300);
+    });
+
+    // Close suggestion box if clicking outside
+    document.addEventListener('click', function(e) {
+        if (e.target !== locationInput) suggestionsBox.style.display = 'none';
+    });
+</script>
+
+</body>
+</html>
